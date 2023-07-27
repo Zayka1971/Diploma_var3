@@ -13,14 +13,12 @@ Base = declarative_base()
 
 
 class Profile(Base):
-    # __table_args__ = {'schema': 'vk_api'}
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     offset = Column(Integer, default=0)
 
 
 class Viewed(Base):
-    # __table_args__ = {'schema': 'vk_api'}
     __tablename__ = 'viewed'
     profile_id = Column(Integer, primary_key=True)
     worksheet_id = Column(Integer, primary_key=True)

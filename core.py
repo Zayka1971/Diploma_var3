@@ -29,6 +29,13 @@ class VkTools:
 
         return user_info
 
+    def get_city_id(self, city):
+        city = self.api.method(
+            method='database.getCities',
+            values={'q': city, 'count': 1}
+        )
+        return city['items'][0]['id'] if city.get('items') else None
+
     def search_users(self, params, offset):
         sex = 1 if params['sex'] == 2 else 2
         city = params['city']
@@ -60,7 +67,6 @@ class VkTools:
                     'sex': sex,
                     'city': city
                 })
-
         return result
 
     def get_photos(self, user_id):

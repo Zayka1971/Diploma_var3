@@ -38,16 +38,33 @@ class BotInterface:
                         user_in_db = create_user(
                             user_id=self.owner_info['id'],
                         )
-                    found_users = self.api.search_users(self.owner_info, offset=user_in_db.offset)
                     self.message_send(
                         user_id=event.user_id,
                         message='Добрый день! Хочешь познакомиться? Напиши "Поиск"'
-            )
+                    )
+                elif 'возраст' in event.text.lower():
+                    try:
+                        self.owner_info['age'] = int(event.text.split(' ')[1])
+                    except (KeyError, ValueError):
+                        self.message_send(
+                            user_id=event.user_id,
+                            message='Неправильные данные'
+                        )
 
-                elif event.text.lower() in ['М', 'Ж']:
-                    self.owner_info['sex'] = 2
-                    if event.text.lower() == 'М':
-                        self.owner_info['sex'] = 1
+                    self.message_send(
+                        user_id=event.user_id,
+                        message='Отлично! напиши "Поиск"'
+                    )
+                elif 'город' in event.text.lower():
+                    city = event.text.split(' ')[1]
+                    city_id = self.api.get_city_id(city)
+                    if city_id:
+                        self.owner_info['city'] = city_id
+                    else:
+                        self.message_send(
+                            user_id=event.user_id,
+                            message='Неправильные данные'
+                        )
 
                     self.message_send(
                         user_id=event.user_id,
@@ -55,19 +72,29 @@ class BotInterface:
                     )
 
                 elif event.text.lower() == 'поиск' and user_in_db:
-                    if not self.owner_info.get('sex'):
+                    if not self.owner_info.get('age'):
                         self.message_send(
                             user_id=event.user_id,
-                            message='Укажите ваш пол: М / Ж'
+                            message='Укажите ваш возраст, пример: возраст 22'
                         )
-                    offset = user_in_db.offset
+                    elif not self.owner_info.get('city'):
+                        self.message_send(
+                            user_id=event.user_id,
+                            message='Укажите ваш город, пример: город Москва'
+                        )
+                    offset = 0
+                    if user_in_db:
+                        offset = user_in_db.offset
                     if not found_users:
-                        found_users = self.api.search_users(self.owner_info, offset=user_in_db.offset)
+                        found_users = self.api.search_users(self.owner_info, offset=offset)
+                        offset += 20
 
                     found_user = found_users.pop()
                     while get_view(profile_id=user_in_db.id, worksheet_id=found_user['id']):
-                        found_user = self.api.search_users(self.owner_info, offset=offset)[0]
-                        offset += 1
+                        if not found_users:
+                            found_users = self.api.search_users(self.owner_info, offset=offset)
+                            offset += 20
+                        found_user = found_users.pop()
                         update_user(user_id=user_in_db.id, offset=offset)
 
                     if not get_view(profile_id=user_in_db.id, worksheet_id=found_user['id']):
@@ -92,7 +119,7 @@ class BotInterface:
                     )
                 else:
                     self.message_send(
-                        user_id=event.user_id, message='Не понимаю, о чем ты!, Напиши Привет'
+                        user_id=event.user_id, message='Не понимаю, о чем ты!, напиши Привет'
                     )
 
 
